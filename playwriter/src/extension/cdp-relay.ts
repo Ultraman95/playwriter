@@ -20,7 +20,7 @@ type PlaywrightClient = {
   ws: WSContext
 }
 
-export async function startRelayServer({ port = 9988 }: { port?: number } = {}) {
+export async function startRelayServer({ port = 9988, logger = console }: { port?: number; logger?: { log(...args: any[]): void; error(...args: any[]): void } } = {}) {
   const connectedTargets = new Map<string, ConnectedTarget>()
 
   const playwrightClients = new Map<string, PlaywrightClient>()
@@ -75,14 +75,14 @@ export async function startRelayServer({ port = 9988 }: { port?: number } = {}) 
 
     if (direction === 'from-playwright') {
       const clientLabel = clientId ? chalk.blue(`[${clientId}]`) : ''
-      console.log(chalk.cyan('← Playwright'), clientLabel + ':', method + detailsStr)
+      logger.log(chalk.cyan('← Playwright'), clientLabel + ':', method + detailsStr)
     } else if (direction === 'from-extension') {
-      console.log(chalk.yellow('← Extension:'), method + detailsStr)
+      logger.log(chalk.yellow('← Extension:'), method + detailsStr)
     } else if (direction === 'to-playwright') {
       const color = source === 'server' ? chalk.magenta : chalk.green
       const sourceLabel = source === 'server' ? chalk.gray(' (server-generated)') : ''
       const clientLabel = clientId ? chalk.blue(`[${clientId}]`) : chalk.blue('[ALL]')
-      console.log(color('→ Playwright'), clientLabel + ':', method + detailsStr + sourceLabel)
+      logger.log(color('→ Playwright'), clientLabel + ':', method + detailsStr + sourceLabel)
     }
   }
 
@@ -227,13 +227,13 @@ export async function startRelayServer({ port = 9988 }: { port?: number } = {}) 
     return {
       onOpen(_event, ws) {
         if (playwrightClients.has(clientId)) {
-          console.log(chalk.red(`Rejecting duplicate client ID: ${clientId}`))
+          logger.log(chalk.red(`Rejecting duplicate client ID: ${clientId}`))
           ws.close(1000, 'Client ID already connected')
           return
         }
 
         playwrightClients.set(clientId, { id: clientId, ws })
-        console.log(chalk.green(`Playwright client connected: ${clientId} (${playwrightClients.size} total)`))
+        logger.log(chalk.green(`Playwright client connected: ${clientId} (${playwrightClients.size} total)`))
       },
 
       async onMessage(event, ws) {
@@ -295,7 +295,7 @@ export async function startRelayServer({ port = 9988 }: { port?: number } = {}) 
             clientId
           })
         } catch (e) {
-          console.error('Error handling CDP command:', method, params, e)
+          logger.error('Error handling CDP command:', method, params, e)
           sendToPlaywright({
             message: {
               id,
@@ -309,11 +309,11 @@ export async function startRelayServer({ port = 9988 }: { port?: number } = {}) 
 
       onClose() {
         playwrightClients.delete(clientId)
-        console.log(chalk.yellow(`Playwright client disconnected: ${clientId} (${playwrightClients.size} remaining)`))
+        logger.log(chalk.yellow(`Playwright client disconnected: ${clientId} (${playwrightClients.size} remaining)`))
       },
 
       onError(event) {
-        console.error(`Playwright WebSocket error [${clientId}]:`, event)
+        logger.error(`Playwright WebSocket error [${clientId}]:`, event)
       }
     }
   }))
@@ -322,13 +322,13 @@ export async function startRelayServer({ port = 9988 }: { port?: number } = {}) 
     return {
       onOpen(_event, ws) {
         if (extensionWs) {
-          console.log('Rejecting second extension connection')
+          logger.log('Rejecting second extension connection')
           ws.close(1000, 'Another extension connection already established')
           return
         }
 
         extensionWs = ws
-        console.log('Extension connected')
+        logger.log('Extension connected')
       },
 
       async onMessage(event, ws) {
@@ -344,7 +344,7 @@ export async function startRelayServer({ port = 9988 }: { port?: number } = {}) 
         if ('id' in message) {
           const pending = extensionPendingRequests.get(message.id)
           if (!pending) {
-            console.log('Unexpected response with id:', message.id)
+            logger.log('Unexpected response with id:', message.id)
             return
           }
 
@@ -412,7 +412,7 @@ export async function startRelayServer({ port = 9988 }: { port?: number } = {}) 
       },
 
       onClose() {
-        console.log('Extension disconnected')
+        logger.log('Extension disconnected')
 
         for (const pending of extensionPendingRequests.values()) {
           pending.reject(new Error('Extension connection closed'))
@@ -429,7 +429,7 @@ export async function startRelayServer({ port = 9988 }: { port?: number } = {}) 
       },
 
       onError(event) {
-        console.error('Extension WebSocket error:', event)
+        logger.error('Extension WebSocket error:', event)
       }
     }
   }))
@@ -441,9 +441,9 @@ export async function startRelayServer({ port = 9988 }: { port?: number } = {}) 
   const cdpEndpoint = `${wsHost}/cdp`
   const extensionEndpoint = `${wsHost}/extension`
 
-  console.log('CDP relay server started')
-  console.log('Extension endpoint:', extensionEndpoint)
-  console.log('CDP endpoint:', cdpEndpoint)
+  logger.log('CDP relay server started')
+  logger.log('Extension endpoint:', extensionEndpoint)
+  logger.log('CDP endpoint:', cdpEndpoint)
 
   return {
     cdpEndpoint,
