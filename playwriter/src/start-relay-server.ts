@@ -1,4 +1,4 @@
-import { startRelayServer } from './extension/cdp-relay.js'
+import { startPlayWriterCDPRelayServer } from './extension/cdp-relay.js'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -21,7 +21,7 @@ const logger = {
 }
 
 export async function startServer({ port = 19988 }: { port?: number } = {}) {
-  const server = await startRelayServer({ port, logger })
+  const server = await startPlayWriterCDPRelayServer({ port, logger })
 
   console.log('CDP Relay Server running. Press Ctrl+C to stop.')
   console.log('Logs are being written to:', logFilePath)
@@ -40,4 +40,4 @@ export async function startServer({ port = 19988 }: { port?: number } = {}) {
 
   return server
 }
-startServer().catch(console.error)
+startServer().catch(logger.error)

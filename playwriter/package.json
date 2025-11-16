@@ -5,7 +5,7 @@
   "type": "module",
   "repository": "https://github.com/remorses/",
   "scripts": {
-    "build": "rm -rf dist *.tsbuildinfo && mkdir dist && cp src/prompt.md dist/ && tsc",
+    "build": "rm -rf dist *.tsbuildinfo && mkdir dist && cp src/resource.md src/prompt.md dist/ && tsc",
     "prepublishOnly": "pnpm build",
     "watch": "tsc -w",
     "typecheck": "tsc --noEmit",
