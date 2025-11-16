@@ -30,7 +30,6 @@ interface VMContext {
     debug: (...args: any[]) => void
   }
   accessibilitySnapshot: (page: Page) => Promise<string>
-  activateTab: (page: Page) => Promise<void>
   resetPlaywright: () => Promise<{ page: Page; context: BrowserContext }>
 }
 
@@ -214,21 +213,12 @@ server.tool(
         throw new Error('accessibilitySnapshot is not available on this page')
       }
 
-      const activateTab = async (targetPage: Page) => {
-        const cdp = await context.newCDPSession(targetPage)
-        const { targetInfo } = await cdp.send('Target.getTargetInfo')
-        const targetId = targetInfo.targetId
-        await cdp.send('Playwriter.activateTab' as any, { targetId })
-        await cdp.detach()
-      }
-
       let vmContextObj: VMContext = {
         page,
         context,
         state,
         console: customConsole,
         accessibilitySnapshot,
-        activateTab,
         resetPlaywright: async () => {
           const { page: newPage, context: newContext } = await resetConnection()
           
@@ -240,7 +230,6 @@ server.tool(
             state,
             console: customConsole,
             accessibilitySnapshot,
-            activateTab,
             resetPlaywright: vmContextObj.resetPlaywright
           }
           Object.keys(vmContextObj).forEach(key => delete (vmContextObj as any)[key])

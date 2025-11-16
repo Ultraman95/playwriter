@@ -219,13 +219,6 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
           params: { method, params }
         })
       }
-
-      case 'Playwriter.activateTab': {
-        return await sendToExtension({
-          method: 'activateTab',
-          params
-        })
-      }
     }
 
     return await sendToExtension({

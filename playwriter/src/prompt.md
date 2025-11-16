@@ -29,8 +29,9 @@ always detach event listener you create at the end of a message using `page.remo
 you have access to some functions in addition to playwright methods:
 
 - `async accessibilitySnapshot(page)`: gets a human readable snapshot of clickable elements on the page. useful to see the overall structure of the page and what elements you can interact with
-- `async activateTab(page)`: activates (brings to front and focuses) the browser tab for the given page
 - `async resetPlaywright()`: recreates the CDP connection and resets the browser/page/context. Use this when the MCP stops responding, you get connection errors, assertion failures, or timeout issues. After calling this, the page and context variables are automatically updated in the execution environment. IMPORTANT: this completely resets the execution context, removing any custom properties you may have added to the global scope AND clearing all keys from the `state` object. Only `page`, `context`, `state` (empty), `console`, and utility functions will remain
+
+To bring a tab to front and focus it, use the standard Playwright method `await page.bringToFront()`
 
 example:
 
