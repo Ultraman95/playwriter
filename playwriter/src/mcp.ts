@@ -171,7 +171,7 @@ server.tool(
       .describe(
         'js playwright code, has {page, state, context} in scope. Should be one line, using ; to execute multiple statements. you MUST call execute multiple times instead of writing complex scripts in a single tool call.',
       ),
-    timeout: z.number().default(3000).describe('Timeout in milliseconds for code execution (default: 3000ms)'),
+    timeout: z.number().default(5000).describe('Timeout in milliseconds for code execution (default: 5000ms)'),
   },
   async ({ code, timeout }) => {
     await ensureConnection()
