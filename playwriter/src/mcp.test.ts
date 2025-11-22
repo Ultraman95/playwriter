@@ -280,7 +280,7 @@ describe('MCP Server Tests', () => {
 
         // 1. Create a new page
         const page = await browserContext.newPage()
-        const testUrl = 'https://example.com/toggling'
+        const testUrl = 'https://example.com/'
         await page.goto(testUrl)
 
         await page.bringToFront()
@@ -353,8 +353,47 @@ describe('MCP Server Tests', () => {
         await directBrowser.close()
         await page.close()
     })
+    it.skip('should maintain connection across reloads and navigation', async () => {
+        if (!browserContext) throw new Error('Browser not initialized')
+        const serviceWorker = await getExtensionServiceWorker(browserContext)
+
+        // 1. Setup page
+        const page = await browserContext.newPage()
+        const initialUrl = 'https://example.com/'
+        await page.goto(initialUrl)
+        await page.bringToFront()
+
+        // 2. Enable extension
+        await serviceWorker.evaluate(async () => {
+            // @ts-ignore
+            await globalThis.toggleExtensionForActiveTab()
+        })
+
+        // 3. Connect via CDP
+        const cdpUrl = getCdpUrl()
+        const directBrowser = await chromium.connectOverCDP(cdpUrl)
+        const connectedPage = directBrowser.contexts()[0].pages().find(p => p.url() === initialUrl)
+        expect(connectedPage).toBeDefined()
+
+        // 4. Reload
+        await connectedPage?.reload()
+        await connectedPage?.waitForLoadState('networkidle')
+        expect(await connectedPage?.title()).toBe('Example Domain')
+
+        // 5. Navigate to new URL
+        const newUrl = 'https://news.ycombinator.com/'
+        await connectedPage?.goto(newUrl)
+        await connectedPage?.waitForLoadState('networkidle')
+        
+        expect(connectedPage?.url()).toBe(newUrl)
+        expect(await connectedPage?.title()).toContain('Hacker News')
+
+        await directBrowser.close()
+        await page.close()
+    })
 
 })
+
 function tryJsonParse(str: string) {
     try {
         return JSON.parse(str)
