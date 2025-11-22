@@ -266,10 +266,21 @@ async function ensureConnection(): Promise<void> {
   debugLog('WebSocket connected successfully, creating RelayConnection instance')
   const newConnection = new RelayConnection({
     ws: socket,
-    onClose: () => {
-      debugLog('=== Relay connection onClose callback triggered ===')
+    onClose: (reason, code) => {
+      debugLog('=== Relay connection onClose callback triggered ===', { reason, code })
       const { connectedTabs } = useExtensionStore.getState()
       debugLog('Connected tabs before potential reconnection:', Array.from(connectedTabs.keys()))
+
+      if (reason === 'Extension Replaced' || code === 4001) {
+        debugLog('Connection replaced by another extension instance. Not reconnecting.')
+        useExtensionStore.setState({
+          connection: undefined,
+          connectionState: 'error',
+          errorText: 'Disconnected: Replaced by another extension',
+        })
+        return
+      }
+
       useExtensionStore.setState({ connection: undefined, connectionState: 'disconnected' })
 
       if (connectedTabs.size > 0) {

@@ -335,32 +335,16 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
     return {
       onOpen(_event, ws) {
         if (extensionWs) {
-          logger.log('Rejecting second extension connection')
-          ws.close(1000, 'Another extension connection already established')
-          return
+          logger.log(chalk.yellow('Closing existing extension connection to replace with new one'))
+          extensionWs.close(4001, 'Extension Replaced')
+          
+          // Clear state from the old connection to prevent leaks
+          connectedTargets.clear()
+          for (const pending of extensionPendingRequests.values()) {
+            pending.reject(new Error('Extension connection replaced'))
+          }
+          extensionPendingRequests.clear()
         }
-
-        // logger.log('Extension connecting, resetting server state')
-
-        // // Clear stale targets from previous connections
-        // const staleTargetCount = connectedTargets.size
-        // if (staleTargetCount > 0) {
-        //   logger.log(`Clearing ${staleTargetCount} stale targets from previous connection`)
-        //   connectedTargets.clear()
-        // }
-
-        // // Reject any pending requests from previous connection
-        // const pendingRequestCount = extensionPendingRequests.size
-        // if (pendingRequestCount > 0) {
-        //   logger.log(`Rejecting ${pendingRequestCount} pending requests from previous connection`)
-        //   for (const pending of extensionPendingRequests.values()) {
-        //     pending.reject(new Error('Extension reconnected, request cancelled'))
-        //   }
-        //   extensionPendingRequests.clear()
-        // }
-
-        // // Reset message ID counter
-        // extensionMessageId = 0
 
         extensionWs = ws
         logger.log('Extension connected with clean state')
@@ -471,8 +455,15 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
         }
       },
 
-      onClose() {
+      onClose(event, ws) {
         logger.log('Extension disconnected')
+
+        // If this is an old connection closing after we've already established a new one,
+        // don't clear the global state
+        if (extensionWs && extensionWs !== ws) {
+           logger.log('Old extension connection closed, keeping new one active')
+           return
+        }
 
         for (const pending of extensionPendingRequests.values()) {
           pending.reject(new Error('Extension connection closed'))

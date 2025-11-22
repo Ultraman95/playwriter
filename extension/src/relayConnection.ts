@@ -42,12 +42,12 @@ export class RelayConnection {
   private _nextSessionId: number = 1;
   private _ws: WebSocket;
   private _closed = false;
-  private _onCloseCallback?: () => void;
+  private _onCloseCallback?: (reason: string, code: number) => void;
   private _onTabDetachedCallback?: (tabId: number, reason: `${chrome.debugger.DetachReason}`) => void
 
   constructor({ ws, onClose, onTabDetached }: {
     ws: WebSocket;
-    onClose?: () => void;
+    onClose?: (reason: string, code: number) => void;
     onTabDetached?: (tabId: number, reason: `${chrome.debugger.DetachReason}`) => void;
   }) {
     this._ws = ws;
@@ -88,7 +88,7 @@ export class RelayConnection {
         reason: event.reason,
         wasClean: event.wasClean
       });
-      this._onClose();
+      this._onClose(event.reason, event.code);
     };
     this._ws.onerror = (event: Event) => {
       debugLog('WebSocket onerror event:', event);
@@ -191,10 +191,10 @@ export class RelayConnection {
   close(message: string): void {
     debugLog('Closing RelayConnection, reason:', message, 'current state:', this._ws.readyState);
     this._ws.close(1000, message);
-    this._onClose();
+    this._onClose(message, 1000);
   }
 
-  private _onClose() {
+  private _onClose(reason: string = 'Unknown', code: number = 1000) {
     if (this._closed) {
       debugLog('_onClose called but already closed');
       return;
@@ -225,7 +225,7 @@ export class RelayConnection {
     debugLog('All tabs cleared from map. Chrome automation bar should disappear in a few seconds.');
 
     debugLog('Connection closed, calling onClose callback');
-    this._onCloseCallback?.();
+    this._onCloseCallback?.(reason, code);
   }
 
   private _onDebuggerEvent = (source: chrome.debugger.DebuggerSession, method: string, params: any): void => {
