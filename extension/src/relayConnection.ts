@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { Protocol } from 'playwriter/src/cdp-types';
+import type { CDPEvent, Protocol } from 'playwriter/src/cdp-types';
 import type { ExtensionCommandMessage, ExtensionResponseMessage } from 'playwriter/src/extension/protocol';
 
 export function debugLog(...args: unknown[]): void {
@@ -151,13 +151,17 @@ export class RelayConnection {
   }
 
   detachTab(tabId: number): void {
+    this._cleanupTab(tabId, true);
+  }
+
+  private _cleanupTab(tabId: number, shouldDetachDebugger: boolean): void {
     const tab = this._attachedTabs.get(tabId);
     if (!tab) {
-      debugLog('detachTab: tab not found in map:', tabId);
+      debugLog('cleanupTab: tab not found in map:', tabId);
       return;
     }
 
-    debugLog('Detaching tab:', tabId, 'sessionId:', tab.sessionId);
+    debugLog('Cleaning up tab:', tabId, 'sessionId:', tab.sessionId, 'shouldDetach:', shouldDetachDebugger);
 
     this._sendMessage({
       method: 'forwardCDPEvent',
@@ -173,13 +177,15 @@ export class RelayConnection {
     this._attachedTabs.delete(tabId);
     debugLog('Removed tab from _attachedTabs map. Remaining tabs:', this._attachedTabs.size);
 
-    chrome.debugger.detach(tab.debuggee)
-      .then(() => {
-        debugLog('Successfully detached debugger from tab:', tabId);
-      })
-      .catch((err) => {
-        debugLog('Error detaching debugger from tab:', tabId, err.message);
-      });
+    if (shouldDetachDebugger) {
+      chrome.debugger.detach(tab.debuggee)
+        .then(() => {
+          debugLog('Successfully detached debugger from tab:', tabId);
+        })
+        .catch((err) => {
+          debugLog('Error detaching debugger from tab:', tabId, err.message);
+        });
+    }
   }
 
   close(message: string): void {
@@ -222,7 +228,7 @@ export class RelayConnection {
     this._onCloseCallback?.();
   }
 
-  private _onDebuggerEvent = (source: chrome.debugger.DebuggerSession, method: CDPEvent['method'], params: any): void => {
+  private _onDebuggerEvent = (source: chrome.debugger.DebuggerSession, method: string, params: any): void => {
     const tab = this._attachedTabs.get(source.tabId!);
     if (!tab) return;
 
@@ -267,19 +273,19 @@ export class RelayConnection {
     debugLog('User closed debugger via Chrome automation bar, calling onTabDetached callback');
     this._onTabDetachedCallback?.(tabId, reason);
 
-    this.detachTab(tabId);
+    this._cleanupTab(tabId, false);
   };
 
-  private async _handleCommand(message: ExtensionCommandMessage): Promise<any> {
-    if (message.method === 'attachToTab') {
+  private async _handleCommand(msg: ExtensionCommandMessage): Promise<any> {
+    if (msg.method === 'attachToTab') {
       return {};
     }
 
-    if (message.method === 'forwardCDPCommand') {
-      const { sessionId, method, params } = message.params;
+    if (msg.method === 'forwardCDPCommand') {
 
-      if (method === 'Target.createTarget') {
-        const url = params?.url || 'about:blank';
+
+      if (msg.params.method === 'Target.createTarget') {
+        const url = msg.params.params?.url || 'about:blank';
         debugLog('Creating new tab with URL:', url);
 
         const tab = await chrome.tabs.create({ url, active: false });
@@ -298,58 +304,58 @@ export class RelayConnection {
         return { targetId: targetInfo.targetId };
       }
 
-      if (method === 'Target.closeTarget' && params?.targetId) {
-        debugLog('Closing target:', params.targetId);
+      if (msg.params.method === 'Target.closeTarget'  && msg.params.params?.targetId) {
+        debugLog('Closing target:', msg.params.params.targetId);
 
         for (const [tabId, tab] of this._attachedTabs) {
-          if (tab.targetId === params.targetId) {
+          if (tab.targetId === msg.params.params.targetId) {
             debugLog('Found tab to close:', tabId);
             await chrome.tabs.remove(tabId);
             return { success: true };
           }
         }
 
-        debugLog('Target not found:', params.targetId);
-        throw new Error(`Target not found: ${params.targetId}`);
+        debugLog('Target not found:', msg.params.params.targetId);
+        throw new Error(`Target not found: ${msg.params.params.targetId}`);
       }
 
       let targetTab: AttachedTab | undefined;
 
       for (const [tabId, tab] of this._attachedTabs) {
-        if (tab.sessionId === sessionId) {
+        if (tab.sessionId === msg.params.sessionId) {
           targetTab = tab;
           break;
         }
       }
 
       if (!targetTab) {
-        if (method === 'Browser.getVersion' || method === 'Target.getTargets') {
+        if (msg.params.method === 'Browser.getVersion' || msg.params.method === 'Target.getTargets') {
           targetTab = this._attachedTabs.values().next().value;
         }
 
         if (!targetTab) {
-          throw new Error(`No tab found for method ${method} sessionId: ${sessionId}`);
+          throw new Error(`No tab found for method ${msg.params.method} sessionId: ${msg.params.sessionId}`);
         }
       }
 
-      debugLog('CDP command:', method, 'for tab:', targetTab.debuggee.tabId);
+      debugLog('CDP command:', msg.params.method, 'for tab:', targetTab.debuggee.tabId);
 
       const debuggerSession: chrome.debugger.DebuggerSession = {
         ...targetTab.debuggee,
-        sessionId: sessionId !== targetTab.sessionId ? sessionId : undefined,
+        sessionId: msg.params.sessionId !== targetTab.sessionId ? msg.params.sessionId : undefined,
       };
 
       const result = await chrome.debugger.sendCommand(
         debuggerSession,
-        method,
-        params
+        msg.params.method,
+        msg.params.params
       );
 
       // When Playwright reconnects and calls Runtime.enable, Chrome does NOT automatically
       // re-send Runtime.executionContextCreated events for contexts that already exist.
       // This causes page.evaluate() to hang because Playwright has no execution context IDs.
       // Solution: manually replay all cached contexts so Playwright gets fresh, valid IDs.
-      if (method === 'Runtime.enable' && targetTab.executionContexts.size > 0) {
+      if (msg.params.method === 'Runtime.enable' && targetTab.executionContexts.size > 0) {
         debugLog('Runtime.enable called, replaying', targetTab.executionContexts.size, 'cached execution contexts for tab:', targetTab.debuggee.tabId);
 
         for (const contextEvent of targetTab.executionContexts.values()) {
@@ -357,7 +363,7 @@ export class RelayConnection {
           this._sendMessage({
             method: 'forwardCDPEvent',
             params: {
-              sessionId: sessionId,
+              sessionId: msg.params.sessionId,
               method: 'Runtime.executionContextCreated',
               params: contextEvent,
             },
