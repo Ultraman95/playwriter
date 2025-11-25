@@ -6,8 +6,11 @@
     <p>Like Playwright MCP but via extension. 90% less context window. 10x more capable (full playwright API)</p>
     <br/>
     <a href="https://chromewebstore.google.com/detail/playwriter-mcp/jfeammnjpkecdekppnclgkkffahnhfhe">
-        <strong>📦 Install Extension from Chrome Web Store</strong>
+        <strong>Install Extension from Chrome Web Store</strong>
     </a>
+    <br/>
+    <br/>
+    <img src="banner.png" alt="Playwriter - For browser automation MCP" width="600" />
     <br/>
     <br/>
 </div>
