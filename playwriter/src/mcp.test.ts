@@ -615,18 +615,6 @@ describe('MCP Server Tests', () => {
             },
             {
               "title": "Example Domain",
-              "url": "https://example.com/mcp-test",
-            },
-            {
-              "title": "Example Domain",
-              "url": "https://example.com/",
-            },
-            {
-              "title": "Example Domain",
-              "url": "https://example.com/",
-            },
-            {
-              "title": "Example Domain",
               "url": "https://example.com/tab-a",
             },
             {
@@ -710,18 +698,6 @@ describe('MCP Server Tests', () => {
             {
               "title": "",
               "url": "about:blank",
-            },
-            {
-              "title": "Example Domain",
-              "url": "https://example.com/mcp-test",
-            },
-            {
-              "title": "Example Domain",
-              "url": "https://example.com/",
-            },
-            {
-              "title": "Example Domain",
-              "url": "https://example.com/",
             },
             {
               "title": "Example Domain",
