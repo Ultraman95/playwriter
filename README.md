@@ -1,16 +1,18 @@
 <div align='center'>
     <br/>
+    <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="banner-dark.png" />
+        <source media="(prefers-color-scheme: light)" srcset="banner.png" />
+        <img src="banner.png" alt="Playwriter - For browser automation MCP" width="600" />
+    </picture>
     <br/>
-    <h3>playwriter</h3>
+    <br/>
     <p>Still in development. Not ready to use</p>
     <p>Like Playwright MCP but via extension. 90% less context window. 10x more capable (full playwright API)</p>
     <br/>
     <a href="https://chromewebstore.google.com/detail/playwriter-mcp/jfeammnjpkecdekppnclgkkffahnhfhe">
         <strong>Install Extension from Chrome Web Store</strong>
     </a>
-    <br/>
-    <br/>
-    <img src="banner.png" alt="Playwriter - For browser automation MCP" width="600" />
     <br/>
     <br/>
 </div>
