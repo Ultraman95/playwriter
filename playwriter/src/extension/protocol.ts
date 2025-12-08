@@ -1,4 +1,4 @@
-import { CDPCommand, CDPEvent, ProtocolMapping } from '../cdp-types.js'
+import { CDPEventFor, ProtocolMapping } from '../cdp-types.js'
 
 export const VERSION = 1
 
@@ -32,9 +32,9 @@ export type ExtensionEventMessage =
     [K in keyof ProtocolMapping.Events]: {
       method: 'forwardCDPEvent'
       params: {
-        method: CDPEvent<K>['method']
+        method: CDPEventFor<K>['method']
         sessionId?: string
-        params?: CDPEvent<K>['params']
+        params?: CDPEventFor<K>['params']
       }
     }
   }[keyof ProtocolMapping.Events]

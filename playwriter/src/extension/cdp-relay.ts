@@ -3,7 +3,7 @@ import { serve } from '@hono/node-server'
 import { createNodeWebSocket } from '@hono/node-ws'
 import type { WSContext } from 'hono/ws'
 import type { Protocol } from '../cdp-types.js'
-import type { CDPCommand, CDPResponse, CDPEvent } from '../cdp-types.js'
+import type { CDPCommand, CDPResponseBase, CDPEventBase, CDPEventFor } from '../cdp-types.js'
 import type { ExtensionMessage, ExtensionEventMessage } from './protocol.js'
 import chalk from 'chalk'
 
@@ -20,7 +20,8 @@ type PlaywrightClient = {
   ws: WSContext
 }
 
-export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.0.0.1', logger = console }: { port?: number; host?: string; logger?: { log(...args: any[]): void; error(...args: any[]): void } } = {}) {
+
+export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.0.0.1', logger }: { port?: number; host?: string; logger?: { log(...args: any[]): void; error(...args: any[]): void } } = {}) {
   const connectedTargets = new Map<string, ConnectedTarget>()
 
   const playwrightClients = new Map<string, PlaywrightClient>()
@@ -88,14 +89,14 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
 
     if (direction === 'from-playwright') {
       const clientLabel = clientId ? chalk.blue(`[${clientId}]`) : ''
-      logger.log(chalk.cyan('← Playwright'), clientLabel + ':', method + detailsStr)
+      logger?.log(chalk.cyan('← Playwright'), clientLabel + ':', method + detailsStr)
     } else if (direction === 'from-extension') {
-      logger.log(chalk.yellow('← Extension:'), method + detailsStr)
+      logger?.log(chalk.yellow('← Extension:'), method + detailsStr)
     } else if (direction === 'to-playwright') {
       const color = source === 'server' ? chalk.magenta : chalk.green
       const sourceLabel = source === 'server' ? chalk.gray(' (server-generated)') : ''
       const clientLabel = clientId ? chalk.blue(`[${clientId}]`) : chalk.blue('[ALL]')
-      logger.log(color('→ Playwright'), clientLabel + ':', method + detailsStr + sourceLabel)
+      logger?.log(color('→ Playwright'), clientLabel + ':', method + detailsStr + sourceLabel)
     }
   }
 
@@ -104,7 +105,7 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
     clientId,
     source = 'extension'
   }: {
-    message: CDPResponse | CDPEvent
+    message: CDPResponseBase | CDPEventBase
     clientId?: string
     source?: 'extension' | 'server'
   }) {
@@ -189,6 +190,25 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
         return {}
       }
 
+      case 'Target.setDiscoverTargets': {
+        return {}
+      }
+
+      case 'Target.attachToTarget': {
+        const targetId = params?.targetId
+        if (!targetId) {
+          throw new Error('targetId is required for Target.attachToTarget')
+        }
+
+        for (const target of connectedTargets.values()) {
+          if (target.targetId === targetId) {
+            return { sessionId: target.sessionId } satisfies Protocol.Target.AttachToTargetResponse
+          }
+        }
+
+        throw new Error(`Target ${targetId} not found in connected targets`)
+      }
+
       case 'Target.getTargetInfo': {
         const targetId = params?.targetId
 
@@ -251,7 +271,7 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
   app.post('/mcp-log', async (c) => {
     try {
       const { level, args } = await c.req.json()
-      const logFn = (logger as any)[level] || logger.log
+      const logFn = (logger as any)[level] || logger?.log
       const prefix = chalk.red(`[MCP] [${level.toUpperCase()}]`)
       logFn(prefix, ...args)
       return c.json({ ok: true })
@@ -266,13 +286,13 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
     return {
       onOpen(_event, ws) {
         if (playwrightClients.has(clientId)) {
-          logger.log(chalk.red(`Rejecting duplicate client ID: ${clientId}`))
+          logger?.log(chalk.red(`Rejecting duplicate client ID: ${clientId}`))
           ws.close(1000, 'Client ID already connected')
           return
         }
 
         playwrightClients.set(clientId, { id: clientId, ws })
-        logger.log(chalk.green(`Playwright client connected: ${clientId} (${playwrightClients.size} total)`))
+        logger?.log(chalk.green(`Playwright client connected: ${clientId} (${playwrightClients.size} total)`))
       },
 
       async onMessage(event, ws) {
@@ -321,10 +341,30 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
                   },
                   waitingForDebugger: false
                 }
-              } satisfies CDPEvent
-              logger.log(chalk.magenta('[Server] Target.attachedToTarget full payload:'), JSON.stringify(attachedPayload))
+              } satisfies CDPEventFor<'Target.attachedToTarget'>
+              logger?.log(chalk.magenta('[Server] Target.attachedToTarget full payload:'), JSON.stringify(attachedPayload))
               sendToPlaywright({
                 message: attachedPayload,
+                clientId,
+                source: 'server'
+              })
+            }
+          }
+
+          if (method === 'Target.setDiscoverTargets' && (params)?.discover) {
+            for (const target of connectedTargets.values()) {
+              const targetCreatedPayload = {
+                method: 'Target.targetCreated',
+                params: {
+                  targetInfo: {
+                    ...target.targetInfo,
+                    attached: true
+                  }
+                }
+              } satisfies CDPEventFor<'Target.targetCreated'>
+              logger?.log(chalk.magenta('[Server] Target.targetCreated full payload:'), JSON.stringify(targetCreatedPayload))
+              sendToPlaywright({
+                message: targetCreatedPayload,
                 clientId,
                 source: 'server'
               })
@@ -336,7 +376,7 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
             clientId
           })
         } catch (e) {
-          logger.error('Error handling CDP command:', method, params, e)
+          logger?.error('Error handling CDP command:', method, params, e)
           sendToPlaywright({
             message: {
               id,
@@ -350,11 +390,11 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
 
       onClose() {
         playwrightClients.delete(clientId)
-        logger.log(chalk.yellow(`Playwright client disconnected: ${clientId} (${playwrightClients.size} remaining)`))
+        logger?.log(chalk.yellow(`Playwright client disconnected: ${clientId} (${playwrightClients.size} remaining)`))
       },
 
       onError(event) {
-        logger.error(`Playwright WebSocket error [${clientId}]:`, event)
+        logger?.error(`Playwright WebSocket error [${clientId}]:`, event)
       }
     }
   }))
@@ -363,9 +403,9 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
     return {
       onOpen(_event, ws) {
         if (extensionWs) {
-          logger.log(chalk.yellow('Closing existing extension connection to replace with new one'))
+          logger?.log(chalk.yellow('Closing existing extension connection to replace with new one'))
           extensionWs.close(4001, 'Extension Replaced')
-          
+
           // Clear state from the old connection to prevent leaks
           connectedTargets.clear()
           for (const pending of extensionPendingRequests.values()) {
@@ -380,7 +420,7 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
         }
 
         extensionWs = ws
-        logger.log('Extension connected with clean state')
+        logger?.log('Extension connected with clean state')
       },
 
       async onMessage(event, ws) {
@@ -396,7 +436,7 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
         if ('id' in message) {
           const pending = extensionPendingRequests.get(message.id)
           if (!pending) {
-            logger.log('Unexpected response with id:', message.id)
+            logger?.log('Unexpected response with id:', message.id)
             return
           }
 
@@ -409,7 +449,7 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
           }
         } else if (message.method === 'log') {
           const { level, args } = message.params
-          const logFn = (logger as any)[level] || logger.log
+          const logFn = (logger as any)[level] || logger?.log
           const prefix = chalk.yellow(`[Extension] [${level.toUpperCase()}]`)
           logFn(prefix, ...args)
         } else {
@@ -431,7 +471,7 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
           if (method === 'Target.attachedToTarget') {
             const targetParams = params as Protocol.Target.AttachedToTargetEvent
 
-            logger.log(chalk.yellow('[Extension] Target.attachedToTarget full payload:'), JSON.stringify({ method, params: targetParams, sessionId }))
+            logger?.log(chalk.yellow('[Extension] Target.attachedToTarget full payload:'), JSON.stringify({ method, params: targetParams, sessionId }))
 
             // Check if we already sent this target to clients (e.g., from Target.setAutoAttach response)
             const alreadyConnected = connectedTargets.has(targetParams.sessionId)
@@ -449,7 +489,7 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
                 message: {
                   method: 'Target.attachedToTarget',
                   params: targetParams
-                } as CDPEvent,
+                } as CDPEventBase,
                 source: 'extension'
               })
             }
@@ -461,7 +501,7 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
               message: {
                 method: 'Target.detachedFromTarget',
                 params: detachParams
-              } as CDPEvent,
+              } as CDPEventBase,
               source: 'extension'
             })
           } else if (method === 'Target.targetInfoChanged') {
@@ -477,7 +517,7 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
               message: {
                 method: 'Target.targetInfoChanged',
                 params: infoParams
-              } as CDPEvent,
+              } as CDPEventBase,
               source: 'extension'
             })
           } else {
@@ -486,7 +526,7 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
                 sessionId,
                 method,
                 params
-              } as CDPEvent,
+              } as CDPEventBase,
               source: 'extension'
             })
           }
@@ -494,12 +534,12 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
       },
 
       onClose(event, ws) {
-        logger.log('Extension disconnected')
+        logger?.log('Extension disconnected')
 
         // If this is an old connection closing after we've already established a new one,
         // don't clear the global state
         if (extensionWs && extensionWs !== ws) {
-           logger.log('Old extension connection closed, keeping new one active')
+           logger?.log('Old extension connection closed, keeping new one active')
            return
         }
 
@@ -518,7 +558,7 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
       },
 
       onError(event) {
-        logger.error('Extension WebSocket error:', event)
+        logger?.error('Extension WebSocket error:', event)
       }
     }
   }))
@@ -530,11 +570,11 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
   const cdpEndpoint = `${wsHost}/cdp`
   const extensionEndpoint = `${wsHost}/extension`
 
-  logger.log('CDP relay server started')
-  logger.log('Host:', host)
-  logger.log('Port:', port)
-  logger.log('Extension endpoint:', extensionEndpoint)
-  logger.log('CDP endpoint:', cdpEndpoint)
+  logger?.log('CDP relay server started')
+  logger?.log('Host:', host)
+  logger?.log('Port:', port)
+  logger?.log('Extension endpoint:', extensionEndpoint)
+  logger?.log('CDP endpoint:', cdpEndpoint)
 
   return {
     close() {

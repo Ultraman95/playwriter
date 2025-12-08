@@ -610,8 +610,8 @@ describe('MCP Server Tests', () => {
         expect(results).toMatchInlineSnapshot(`
           [
             {
-              "title": "",
-              "url": "about:blank",
+              "title": "🎄 Twelve Days of Shell 🎄",
+              "url": "https://12days.cmdchallenge.com/",
             },
             {
               "title": "Example Domain",
@@ -696,8 +696,8 @@ describe('MCP Server Tests', () => {
         expect(results).toMatchInlineSnapshot(`
           [
             {
-              "title": "",
-              "url": "about:blank",
+              "title": "🎄 Twelve Days of Shell 🎄",
+              "url": "https://12days.cmdchallenge.com/",
             },
             {
               "title": "Example Domain",
@@ -762,18 +762,18 @@ describe('MCP Server Tests', () => {
         const pages = await browserContext.pages()
         expect(pages.length).toBeGreaterThan(0)
         const page = pages[0]
-        
+
         await page.goto('https://example.com/disconnect-test')
         await page.waitForLoadState('networkidle')
         await page.bringToFront()
-        
+
         // Enable extension on this page
         const initialEnable = await serviceWorker.evaluate(async () => {
             return await globalThis.toggleExtensionForActiveTab()
         })
         console.log('Initial enable result:', initialEnable)
         expect(initialEnable.isConnected).toBe(true)
-        
+
         // Wait for extension to fully connect
         await new Promise(resolve => setTimeout(resolve, 500))
 
@@ -790,7 +790,7 @@ describe('MCP Server Tests', () => {
         `,
             },
         })
-        
+
         const beforeOutput = (beforeDisconnect as any).content[0].text
         expect(beforeOutput).toContain('foundTestPage')
         console.log('Before disconnect:', beforeOutput)
@@ -800,7 +800,7 @@ describe('MCP Server Tests', () => {
         await serviceWorker.evaluate(async () => {
             await globalThis.disconnectEverything()
         })
-        
+
         // Wait for disconnect to complete
         await new Promise(resolve => setTimeout(resolve, 500))
 
@@ -815,7 +815,7 @@ describe('MCP Server Tests', () => {
         `,
             },
         })
-        
+
         const afterDisconnectOutput = (afterDisconnect as any).content[0].text
         console.log('After disconnect:', afterDisconnectOutput)
         expect(afterDisconnectOutput).toContain('Pages after disconnect: 0')
@@ -829,10 +829,10 @@ describe('MCP Server Tests', () => {
             console.log('toggleExtensionForActiveTab result:', result)
             return result
         })
-        
+
         console.log('Reconnect result:', reconnectResult)
         expect(reconnectResult.isConnected).toBe(true)
-        
+
         // Wait for extension to fully reconnect and relay server to be ready
         console.log('Waiting for reconnection to stabilize...')
         await new Promise(resolve => setTimeout(resolve, 1000))
@@ -863,25 +863,25 @@ describe('MCP Server Tests', () => {
           console.log('Checking pages after reconnect...');
           const pages = context.pages();
           console.log('Pages after reconnect:', pages.length);
-          
+
           if (pages.length === 0) {
             console.log('No pages found!');
             return { pagesCount: 0, foundTestPage: false };
           }
-          
+
           const testPage = pages.find(p => p.url().includes('disconnect-test'));
           console.log('Found test page after reconnect:', !!testPage);
-          
+
           if (testPage) {
             console.log('Test page URL:', testPage.url());
             return { pagesCount: pages.length, foundTestPage: true, url: testPage.url() };
           }
-          
+
           return { pagesCount: pages.length, foundTestPage: false };
         `,
             },
         })
-        
+
         const afterReconnectOutput = (afterReconnect as any).content[0].text
         console.log('After reconnect:', afterReconnectOutput)
         expect(afterReconnectOutput).toContain('foundTestPage')
@@ -900,11 +900,11 @@ describe('MCP Server Tests', () => {
           // Clear any existing logs from previous tests
           clearAllLogs();
           console.log('Cleared all existing logs');
-          
+
           // Verify connection is working
           const pages = context.pages();
           console.log('Current pages count:', pages.length);
-          
+
           return { success: true, pagesCount: pages.length };
         `,
             },
@@ -996,7 +996,7 @@ describe('MCP Server Tests', () => {
         `,
             },
         })
-        
+
         const beforeReloadOutput = (beforeReloadResult as any).content[0].text
         expect(beforeReloadOutput).toContain('[log] Before reload 99999')
 
@@ -1025,7 +1025,7 @@ describe('MCP Server Tests', () => {
         `,
             },
         })
-        
+
         const afterReloadOutput = (afterReloadResult as any).content[0].text
         expect(afterReloadOutput).toContain('[log] After reload 88888')
         expect(afterReloadOutput).not.toContain('[log] Before reload 99999')
@@ -1355,6 +1355,60 @@ describe('MCP Server Tests', () => {
         }
 
         await page.close()
+    }, 60000)
+
+    it('should work with stagehand', async () => {
+        if (!browserContext) throw new Error('Browser not initialized')
+        const serviceWorker = await getExtensionServiceWorker(browserContext)
+
+        await serviceWorker.evaluate(async () => {
+            await globalThis.disconnectEverything()
+        })
+        await new Promise(r => setTimeout(r, 500))
+
+        const targetUrl = 'https://example.com/'
+
+        const enableResult = await serviceWorker.evaluate(async (url) => {
+            const tab = await chrome.tabs.create({ url, active: true })
+            await new Promise(r => setTimeout(r, 1000))
+            return await globalThis.toggleExtensionForActiveTab()
+        }, targetUrl)
+
+        console.log('Extension enabled:', enableResult)
+        expect(enableResult.isConnected).toBe(true)
+
+        await new Promise(r => setTimeout(r, 1000))
+
+        const { Stagehand } = await import('@browserbasehq/stagehand')
+
+        const stagehand = new Stagehand({
+            env: 'LOCAL',
+            verbose: 1,
+            disablePino: true,
+            localBrowserLaunchOptions: {
+                cdpUrl: getCdpUrl(),
+            },
+        })
+
+        console.log('Initializing Stagehand...')
+        await stagehand.init()
+        console.log('Stagehand initialized')
+
+        const context = stagehand.context
+        console.log('Stagehand context:', context)
+        expect(context).toBeDefined()
+
+        const pages = context.pages()
+        console.log('Stagehand pages:', pages.length, pages.map(p => p.url()))
+
+        const stagehandPage = pages.find(p => p.url().includes('example.com'))
+        expect(stagehandPage).toBeDefined()
+
+        const url = stagehandPage!.url()
+        console.log('Stagehand page URL:', url)
+        expect(url).toContain('example.com')
+
+        await stagehand.close()
     }, 60000)
 
 })
