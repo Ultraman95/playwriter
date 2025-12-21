@@ -20,6 +20,8 @@ read playwriter/src/prompt.md to understand how the MCP works
 
 mcp.ts MUST never use console.log. only console.error
 
+write code that will run on all platforms: mac, linux, windows. especially around paths handling and command execution
+
 ## development
 
 extension/ contains the chrome extension code. you need to run `pnpm build` to make it ready to be loaded in chrome. the extension folder chrome will use is extension/dist
