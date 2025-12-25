@@ -97,7 +97,7 @@ you have access to some functions in addition to playwright methods:
     - Example: `const cdp = await getCDPSession({ page }); const metrics = await cdp.send('Page.getLayoutMetrics');`
 - `createDebugger({ cdp })`: creates a Debugger instance for setting breakpoints, stepping, and inspecting variables. Works with browser JS or Node.js (--inspect).
     - `cdp`: a CDPSession from `getCDPSession`
-    - Methods: `enable()`, `setBreakpoint({ file, line })`, `deleteBreakpoint({ breakpointId })`, `listBreakpoints()`, `listScripts({ search? })`, `evaluate({ expression })`, `executeCode({ code })`, `inspectVariables({ scope? })`, `getLocation()`, `stepOver()`, `stepInto()`, `stepOut()`, `resume()`, `getConsoleOutput({ limit? })`, `isPaused()`
+    - Methods: `enable()`, `setBreakpoint({ file, line })`, `deleteBreakpoint({ breakpointId })`, `listBreakpoints()`, `listScripts({ search? })`, `evaluate({ expression })`, `inspectVariables({ scope? })`, `getLocation()`, `stepOver()`, `stepInto()`, `stepOut()`, `resume()`, `isPaused()`
     - Example:
       ```js
       const cdp = await getCDPSession({ page }); const dbg = createDebugger({ cdp }); await dbg.enable();

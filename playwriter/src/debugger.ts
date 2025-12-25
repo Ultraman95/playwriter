@@ -7,12 +7,6 @@ export interface BreakpointInfo {
   line: number
 }
 
-export interface ConsoleEntry {
-  type: string
-  message: string
-  timestamp: number
-}
-
 export interface LocationInfo {
   url: string
   lineNumber: number
@@ -28,7 +22,6 @@ export interface LocationInfo {
 
 export interface EvaluateResult {
   value: unknown
-  consoleOutput: string[]
 }
 
 export interface VariablesResult {
@@ -62,7 +55,6 @@ export class Debugger {
   private paused = false
   private currentCallFrames: Protocol.Debugger.CallFrame[] = []
   private breakpoints = new Map<string, BreakpointInfo>()
-  private consoleOutput: ConsoleEntry[] = []
   private scripts = new Map<string, ScriptInfo>()
 
   /**
@@ -101,33 +93,6 @@ export class Debugger {
         })
       }
     })
-
-    this.cdp.on('Runtime.consoleAPICalled', (params) => {
-      const message = params.args
-        .map((arg) => {
-          if (arg.type === 'string' || arg.type === 'number' || arg.type === 'boolean') {
-            return String(arg.value)
-          }
-          if (arg.type === 'object') {
-            if (arg.value) {
-              return JSON.stringify(arg.value, null, 2)
-            }
-            return arg.description || `[${arg.subtype || arg.type}]`
-          }
-          return JSON.stringify(arg)
-        })
-        .join(' ')
-
-      this.consoleOutput.push({
-        type: params.type,
-        message,
-        timestamp: Date.now(),
-      })
-
-      if (this.consoleOutput.length > 100) {
-        this.consoleOutput.shift()
-      }
-    })
   }
 
   /**
@@ -147,57 +112,6 @@ export class Debugger {
     await this.cdp.send('Runtime.enable')
     await this.cdp.send('Runtime.runIfWaitingForDebugger')
     this.debuggerEnabled = true
-  }
-
-  /**
-   * Executes JavaScript code in the debugged process.
-   * Code is wrapped in try-catch and promises are awaited.
-   *
-   * @param options - Execution options
-   * @param options.code - JavaScript code to execute
-   * @returns The result value and any console output generated
-   *
-   * @example
-   * ```ts
-   * const result = await dbg.executeCode({ code: 'Object.keys(require.cache).length' })
-   * console.log(result.value) // 42
-   * console.log(result.consoleOutput) // ['[log] some message']
-   * ```
-   */
-  async executeCode({ code }: { code: string }): Promise<EvaluateResult> {
-    await this.enable()
-
-    const consoleStartIndex = this.consoleOutput.length
-
-    const wrappedCode = `
-      try {
-        ${code}
-      } catch (e) {
-        e;
-      }
-    `
-
-    const response = await this.cdp.send('Runtime.evaluate', {
-      expression: wrappedCode,
-      objectGroup: 'console',
-      includeCommandLineAPI: true,
-      silent: false,
-      returnByValue: true,
-      generatePreview: true,
-      awaitPromise: true,
-    })
-
-    await new Promise((resolve) => {
-      setTimeout(resolve, 200)
-    })
-
-    const consoleOutputs = this.consoleOutput.slice(consoleStartIndex)
-    const value = await this.processRemoteObject(response.result)
-
-    return {
-      value,
-      consoleOutput: consoleOutputs.map((o) => `[${o.type}] ${o.message}`),
-    }
   }
 
   /**
@@ -345,7 +259,7 @@ export class Debugger {
    *
    * @param options - Options
    * @param options.expression - JavaScript expression to evaluate
-   * @returns The result value and any console output generated
+   * @returns The result value
    *
    * @example
    * ```ts
@@ -359,8 +273,6 @@ export class Debugger {
    */
   async evaluate({ expression }: { expression: string }): Promise<EvaluateResult> {
     await this.enable()
-
-    const consoleStartIndex = this.consoleOutput.length
 
     const wrappedExpression = `
       try {
@@ -395,17 +307,9 @@ export class Debugger {
       })
     }
 
-    await new Promise((resolve) => {
-      setTimeout(resolve, 200)
-    })
-
-    const consoleOutputs = this.consoleOutput.slice(consoleStartIndex)
     const value = await this.processRemoteObject(response.result)
 
-    return {
-      value,
-      consoleOutput: consoleOutputs.map((o) => `[${o.type}] ${o.message}`),
-    }
+    return { value }
   }
 
   /**
@@ -545,24 +449,6 @@ export class Debugger {
       throw new Error('Debugger is not paused')
     }
     await this.cdp.send('Debugger.resume')
-  }
-
-  /**
-   * Gets the most recent console output captured from the debugged process.
-   * Console output is captured automatically via Runtime.consoleAPICalled events.
-   *
-   * @param options - Options
-   * @param options.limit - Maximum number of entries to return (default: 20)
-   * @returns Array of console entries with type, message, and timestamp
-   *
-   * @example
-   * ```ts
-   * const logs = dbg.getConsoleOutput({ limit: 10 })
-   * // [{ type: 'log', message: 'Hello world', timestamp: 1234567890 }]
-   * ```
-   */
-  getConsoleOutput({ limit = 20 }: { limit?: number } = {}): ConsoleEntry[] {
-    return this.consoleOutput.slice(-limit)
   }
 
   /**
