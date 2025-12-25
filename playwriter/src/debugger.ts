@@ -35,6 +35,27 @@ export interface VariablesResult {
   [scope: string]: Record<string, unknown>
 }
 
+export interface ScriptInfo {
+  scriptId: string
+  url: string
+}
+
+/**
+ * A class for debugging JavaScript code via Chrome DevTools Protocol.
+ * Works with both Node.js (--inspect) and browser debugging.
+ *
+ * @example
+ * ```ts
+ * const cdp = await getCDPSessionForPage({ page, wsUrl })
+ * const dbg = new Debugger({ cdp })
+ *
+ * await dbg.setBreakpoint({ file: '/path/to/file.js', line: 42 })
+ * // trigger the code path, then:
+ * const location = await dbg.getLocation()
+ * const vars = await dbg.inspectVariables()
+ * await dbg.resume()
+ * ```
+ */
 export class Debugger {
   private cdp: CDPSession
   private debuggerEnabled = false
@@ -42,7 +63,20 @@ export class Debugger {
   private currentCallFrames: Protocol.Debugger.CallFrame[] = []
   private breakpoints = new Map<string, BreakpointInfo>()
   private consoleOutput: ConsoleEntry[] = []
+  private scripts = new Map<string, ScriptInfo>()
 
+  /**
+   * Creates a new Debugger instance.
+   *
+   * @param options - Configuration options
+   * @param options.cdp - A CDPSession instance for sending CDP commands
+   *
+   * @example
+   * ```ts
+   * const cdp = await getCDPSessionForPage({ page, wsUrl })
+   * const dbg = new Debugger({ cdp })
+   * ```
+   */
   constructor({ cdp }: { cdp: CDPSession }) {
     this.cdp = cdp
     this.setupEventListeners()
@@ -57,6 +91,15 @@ export class Debugger {
     this.cdp.on('Debugger.resumed', () => {
       this.paused = false
       this.currentCallFrames = []
+    })
+
+    this.cdp.on('Debugger.scriptParsed', (params) => {
+      if (params.url && params.url.endsWith('.js')) {
+        this.scripts.set(params.scriptId, {
+          scriptId: params.scriptId,
+          url: params.url,
+        })
+      }
     })
 
     this.cdp.on('Runtime.consoleAPICalled', (params) => {
@@ -87,6 +130,15 @@ export class Debugger {
     })
   }
 
+  /**
+   * Enables the debugger and runtime domains. Called automatically by other methods.
+   * Also resumes execution if the target was started with --inspect-brk.
+   *
+   * @example
+   * ```ts
+   * await dbg.enable()
+   * ```
+   */
   async enable(): Promise<void> {
     if (this.debuggerEnabled) {
       return
@@ -97,6 +149,21 @@ export class Debugger {
     this.debuggerEnabled = true
   }
 
+  /**
+   * Executes JavaScript code in the debugged process.
+   * Code is wrapped in try-catch and promises are awaited.
+   *
+   * @param options - Execution options
+   * @param options.code - JavaScript code to execute
+   * @returns The result value and any console output generated
+   *
+   * @example
+   * ```ts
+   * const result = await dbg.executeCode({ code: 'Object.keys(require.cache).length' })
+   * console.log(result.value) // 42
+   * console.log(result.consoleOutput) // ['[log] some message']
+   * ```
+   */
   async executeCode({ code }: { code: string }): Promise<EvaluateResult> {
     await this.enable()
 
@@ -133,6 +200,22 @@ export class Debugger {
     }
   }
 
+  /**
+   * Sets a breakpoint at a specified file and line number.
+   * The file path is automatically converted to a file:// URL if needed.
+   *
+   * @param options - Breakpoint options
+   * @param options.file - Absolute file path or URL
+   * @param options.line - Line number (1-based)
+   * @returns The breakpoint ID for later removal
+   *
+   * @example
+   * ```ts
+   * const id = await dbg.setBreakpoint({ file: '/app/src/index.js', line: 42 })
+   * // later:
+   * await dbg.deleteBreakpoint({ breakpointId: id })
+   * ```
+   */
   async setBreakpoint({ file, line }: { file: string; line: number }): Promise<string> {
     await this.enable()
 
@@ -151,16 +234,58 @@ export class Debugger {
     return response.breakpointId
   }
 
+  /**
+   * Removes a breakpoint by its ID.
+   *
+   * @param options - Options
+   * @param options.breakpointId - The breakpoint ID returned by setBreakpoint
+   *
+   * @example
+   * ```ts
+   * await dbg.deleteBreakpoint({ breakpointId: 'bp-123' })
+   * ```
+   */
   async deleteBreakpoint({ breakpointId }: { breakpointId: string }): Promise<void> {
     await this.enable()
     await this.cdp.send('Debugger.removeBreakpoint', { breakpointId })
     this.breakpoints.delete(breakpointId)
   }
 
+  /**
+   * Returns a list of all active breakpoints set by this debugger instance.
+   *
+   * @returns Array of breakpoint info objects
+   *
+   * @example
+   * ```ts
+   * const breakpoints = dbg.listBreakpoints()
+   * // [{ id: 'bp-123', file: '/app/index.js', line: 42 }]
+   * ```
+   */
   listBreakpoints(): BreakpointInfo[] {
     return Array.from(this.breakpoints.values())
   }
 
+  /**
+   * Inspects variables in the current scope.
+   * When paused at a breakpoint with scope='local', returns variables from the call frame.
+   * Otherwise returns global scope information.
+   *
+   * @param options - Options
+   * @param options.scope - 'local' for call frame variables, 'global' for global scope
+   * @returns Variables grouped by scope type
+   *
+   * @example
+   * ```ts
+   * // When paused at a breakpoint:
+   * const vars = await dbg.inspectVariables({ scope: 'local' })
+   * // { local: { myVar: 'hello', count: 42 }, closure: { captured: true } }
+   *
+   * // Global scope:
+   * const globals = await dbg.inspectVariables({ scope: 'global' })
+   * // { lexicalNames: [...], globalThis: { ... } }
+   * ```
+   */
   async inspectVariables({ scope = 'local' }: { scope?: 'local' | 'global' } = {}): Promise<VariablesResult> {
     await this.enable()
 
@@ -213,6 +338,25 @@ export class Debugger {
     return result
   }
 
+  /**
+   * Evaluates a JavaScript expression in the current context.
+   * When paused at a breakpoint, evaluates in the call frame context (can access local variables).
+   * Otherwise evaluates in the global context.
+   *
+   * @param options - Options
+   * @param options.expression - JavaScript expression to evaluate
+   * @returns The result value and any console output generated
+   *
+   * @example
+   * ```ts
+   * // When paused, can access local variables:
+   * const result = await dbg.evaluate({ expression: 'localVar + 1' })
+   *
+   * // Global context when not paused:
+   * const result = await dbg.evaluate({ expression: 'process.env.NODE_ENV' })
+   * console.log(result.value) // 'development'
+   * ```
+   */
   async evaluate({ expression }: { expression: string }): Promise<EvaluateResult> {
     await this.enable()
 
@@ -264,6 +408,26 @@ export class Debugger {
     }
   }
 
+  /**
+   * Gets the current execution location when paused at a breakpoint.
+   * Includes the call stack and surrounding source code for context.
+   *
+   * @returns Location info with URL, line number, call stack, and source context
+   * @throws Error if debugger is not paused
+   *
+   * @example
+   * ```ts
+   * const location = await dbg.getLocation()
+   * console.log(location.url)          // '/app/src/index.js'
+   * console.log(location.lineNumber)   // 42
+   * console.log(location.callstack)    // [{ functionName: 'handleRequest', ... }]
+   * console.log(location.sourceContext)
+   * // '  40: function handleRequest(req) {
+   * //   41:   const data = req.body
+   * // > 42:   processData(data)
+   * //   43: }'
+   * ```
+   */
   async getLocation(): Promise<LocationInfo> {
     await this.enable()
 
@@ -305,6 +469,17 @@ export class Debugger {
     }
   }
 
+  /**
+   * Steps over to the next line of code, not entering function calls.
+   *
+   * @throws Error if debugger is not paused
+   *
+   * @example
+   * ```ts
+   * await dbg.stepOver()
+   * const newLocation = await dbg.getLocation()
+   * ```
+   */
   async stepOver(): Promise<void> {
     await this.enable()
     if (!this.paused) {
@@ -313,6 +488,18 @@ export class Debugger {
     await this.cdp.send('Debugger.stepOver')
   }
 
+  /**
+   * Steps into a function call on the current line.
+   *
+   * @throws Error if debugger is not paused
+   *
+   * @example
+   * ```ts
+   * await dbg.stepInto()
+   * const location = await dbg.getLocation()
+   * // now inside the called function
+   * ```
+   */
   async stepInto(): Promise<void> {
     await this.enable()
     if (!this.paused) {
@@ -321,6 +508,18 @@ export class Debugger {
     await this.cdp.send('Debugger.stepInto')
   }
 
+  /**
+   * Steps out of the current function, returning to the caller.
+   *
+   * @throws Error if debugger is not paused
+   *
+   * @example
+   * ```ts
+   * await dbg.stepOut()
+   * const location = await dbg.getLocation()
+   * // back in the calling function
+   * ```
+   */
   async stepOut(): Promise<void> {
     await this.enable()
     if (!this.paused) {
@@ -329,6 +528,17 @@ export class Debugger {
     await this.cdp.send('Debugger.stepOut')
   }
 
+  /**
+   * Resumes code execution until the next breakpoint or completion.
+   *
+   * @throws Error if debugger is not paused
+   *
+   * @example
+   * ```ts
+   * await dbg.resume()
+   * // execution continues
+   * ```
+   */
   async resume(): Promise<void> {
     await this.enable()
     if (!this.paused) {
@@ -337,12 +547,65 @@ export class Debugger {
     await this.cdp.send('Debugger.resume')
   }
 
+  /**
+   * Gets the most recent console output captured from the debugged process.
+   * Console output is captured automatically via Runtime.consoleAPICalled events.
+   *
+   * @param options - Options
+   * @param options.limit - Maximum number of entries to return (default: 20)
+   * @returns Array of console entries with type, message, and timestamp
+   *
+   * @example
+   * ```ts
+   * const logs = dbg.getConsoleOutput({ limit: 10 })
+   * // [{ type: 'log', message: 'Hello world', timestamp: 1234567890 }]
+   * ```
+   */
   getConsoleOutput({ limit = 20 }: { limit?: number } = {}): ConsoleEntry[] {
     return this.consoleOutput.slice(-limit)
   }
 
+  /**
+   * Returns whether the debugger is currently paused at a breakpoint.
+   *
+   * @returns true if paused, false otherwise
+   *
+   * @example
+   * ```ts
+   * if (dbg.isPaused()) {
+   *   const vars = await dbg.inspectVariables()
+   * }
+   * ```
+   */
   isPaused(): boolean {
     return this.paused
+  }
+
+  /**
+   * Lists available .js scripts where breakpoints can be set.
+   * Scripts are collected from Debugger.scriptParsed events after enable() is called.
+   *
+   * @param options - Options
+   * @param options.search - Optional string to filter scripts by URL (case-insensitive)
+   * @returns Array of up to 20 matching scripts with scriptId and url
+   *
+   * @example
+   * ```ts
+   * // List all scripts
+   * const scripts = dbg.listScripts()
+   * // [{ scriptId: '1', url: 'file:///app/index.js' }, ...]
+   *
+   * // Search for specific files
+   * const handlers = dbg.listScripts({ search: 'handler' })
+   * // [{ scriptId: '5', url: 'file:///app/src/handlers.js' }]
+   * ```
+   */
+  listScripts({ search }: { search?: string } = {}): ScriptInfo[] {
+    const scripts = Array.from(this.scripts.values())
+    const filtered = search
+      ? scripts.filter((s) => s.url.toLowerCase().includes(search.toLowerCase()))
+      : scripts
+    return filtered.slice(0, 20)
   }
 
   private formatPropertyValue(value: Protocol.Runtime.RemoteObject): unknown {
