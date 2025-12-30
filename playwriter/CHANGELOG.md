@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.32
+
+### Patch Changes
+
+- **Build-time resource generation**: API docs (debugger-api, editor-api, styles-api) are now generated at build time via `build-resources.ts`
+- **Hosted resources on playwriter.dev**: Resources now use `https://playwriter.dev/resources/*.md` URLs instead of `playwriter://` custom URIs
+- **Simplified mcp.ts**: Resource handlers now read pre-built markdown files from `dist/` instead of constructing content at runtime
+
 ## 0.0.31
 
 ### Patch Changes
