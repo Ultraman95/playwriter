@@ -7,6 +7,7 @@ export interface TabInfo {
   state: TabState
   errorText?: string
   pinnedCount?: number
+  attachOrder?: number
 }
 
 export interface ExtensionState {

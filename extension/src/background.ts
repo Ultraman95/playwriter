@@ -385,6 +385,7 @@ async function attachTab(tabId: number): Promise<Protocol.Target.TargetInfo> {
   )) as Protocol.Target.GetTargetInfoResponse
 
   const targetInfo = result.targetInfo
+  const attachOrder = nextSessionId
   const sessionId = `pw-tab-${nextSessionId++}`
 
   store.setState((state) => {
@@ -393,6 +394,7 @@ async function attachTab(tabId: number): Promise<Protocol.Target.TargetInfo> {
       sessionId,
       targetId: targetInfo.targetId,
       state: 'connected',
+      attachOrder,
     })
     return { tabs: newTabs, connectionState: 'connected', errorText: undefined }
   })
@@ -1025,6 +1027,12 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
   const name = `playwriterPinnedElem${count}`
 
+  const connectedTabs = Array.from(store.getState().tabs.entries())
+    .filter(([_, t]) => t.state === 'connected')
+    .sort((a, b) => (a[1].attachOrder ?? 0) - (b[1].attachOrder ?? 0))
+  const pageIndex = connectedTabs.findIndex(([id]) => id === tab.id)
+  const hasMultiplePages = connectedTabs.length > 1
+
   try {
     const result = (await chrome.debugger.sendCommand(debuggee, 'Runtime.evaluate', {
       expression: `
@@ -1043,6 +1051,10 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       return
     }
 
+    const clipboardText = hasMultiplePages
+      ? `globalThis.${name} (page ${pageIndex}, ${tab.url || 'unknown url'})`
+      : `globalThis.${name}`
+
     await chrome.debugger.sendCommand(debuggee, 'Runtime.evaluate', {
       expression: `
         (() => {
@@ -1051,7 +1063,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
           const orig = el.getAttribute('style') || '';
           el.setAttribute('style', orig + '; outline: 3px solid #22c55e !important; outline-offset: 2px !important; box-shadow: 0 0 0 3px #22c55e !important;');
           setTimeout(() => el.setAttribute('style', orig), 300);
-          return navigator.clipboard.writeText('globalThis.${name}');
+          return navigator.clipboard.writeText(${JSON.stringify(clipboardText)});
         })()
       `,
       awaitPromise: true,
