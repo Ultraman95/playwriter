@@ -460,6 +460,19 @@ gitchamber allows you to list, search and read files in a repo. you MUST use it 
 you can control the browser using the playwright mcp tools. these tools let you control the browser to get information or accomplish actions
 
 if i ask you to test something in the browser, know that the website dev server is already running at http://localhost:7664 for website and :7777 for docs-website (but docs-website needs to use the website domain specifically, for example name-hash.localhost:7777)
+
+## playwright source code
+
+the playwright source code is cloned at `./tmp/playwright` (gitignored). use Task agents to explore it when you need to understand how playwright implements CDP commands, page discovery, browser connection, etc. key files:
+
+- `packages/playwright-core/src/server/chromium/` - chromium-specific CDP implementation
+- `packages/playwright-core/src/server/chromium/crConnection.ts` - CDP websocket connection
+- `packages/playwright-core/src/server/chromium/crBrowser.ts` - browser and page discovery
+- `packages/playwright-core/src/server/chromium/chromium.ts` - connectOverCDP implementation
+- `packages/playwright-core/src/server/frames.ts` - frame and context management
+
+read `docs/playwright-cdp-connection.md` for a detailed breakdown of what CDP commands/events playwright sends and expects when connecting via CDP. this doc explains the full connection sequence, context promises, and what must happen before user code can run.
+
 # zod
 
 when you need to create a complex type that comes from a prisma table, do not create a new schema that tries to recreate the prisma table structure. instead just use `z.any() as ZodType<PrismaTable>)` to get type safety but leave any in the schema. this gets most of the benefits of zod without having to define a new zod schema that can easily go out of sync.
