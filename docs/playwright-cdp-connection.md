@@ -330,10 +330,24 @@ This ensures the page has a **valid URL and frame structure** before user code s
 ### Key Insights
 
 - `context.on('page')` and `context.waitForEvent('page')` fire on the **same event**
+- **`waitForEvent('page')` only waits for NEW pages** - it will NOT resolve with existing pages
+- To handle existing pages, check `context.pages()` first before waiting
 - The 'page' event fires AFTER page initialization, not immediately on attach
 - `Runtime.executionContextCreated` is NOT required for the 'page' event
 - The 'page' event guarantees the page has a valid URL and frame tree
 - `page.evaluate()` may still need to wait for execution context after 'page' fires
+
+### Handling Existing vs New Pages
+
+```typescript
+// waitForEvent only catches NEW pages, not existing ones
+const existingPages = context.pages();
+if (existingPages.length > 0) {
+  return existingPages[0];  // use existing
+}
+// Only wait if no pages exist yet
+const newPage = await context.waitForEvent('page');
+```
 
 ### Timing Implications for CDP Relay
 
@@ -344,3 +358,41 @@ For `context.on('page')` to fire, the relay must:
 3. Either:
    - Provide a non-empty URL (not `:`) in the frame tree
    - Or send `Page.frameNavigated` event after navigation
+
+## Empty URL Detection
+
+Empty URLs in `Target.attachedToTarget` cause Playwright to create broken pages that
+never recover. Both the extension and relay log errors when this happens:
+
+### Extension logging
+
+```typescript
+// In attachTab(), after Target.getTargetInfo
+if (!targetInfo.url || targetInfo.url === '' || targetInfo.url === ':') {
+  logger.error('WARNING: Target.attachedToTarget will be sent with empty URL!')
+}
+```
+
+### Relay logging
+
+The relay logs `logger.error` warnings when:
+- `Target.attachedToTarget` is sent/received with empty URL
+- `Target.targetCreated` is sent with empty URL
+
+### Why empty URLs break Playwright
+
+If `Target.attachedToTarget` is sent with empty URL:
+- Playwright creates a broken page
+- `_firstNonInitialNavigationCommittedPromise` may never resolve
+- `page.evaluate()` hangs forever
+- **No recovery possible**
+
+### Debugging empty URL issues
+
+Check the logs at `~/.config/opencode/playwriter.log` for:
+```
+WARNING: Target.attachedToTarget sent with empty URL
+WARNING: Target.attachedToTarget received with empty URL
+```
+
+These indicate timing issues where the page hasn't fully loaded when attached.

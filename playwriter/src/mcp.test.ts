@@ -1260,6 +1260,45 @@ describe('MCP Server Tests', () => {
         await page.close()
     }, 30000)
 
+    it('should be usable after toggle with waitForEvent', async () => {
+        // This test demonstrates the proper way to wait for a page after toggle.
+        // Instead of arbitrary sleep(), use context.waitForEvent('page').
+        // See page-ready-investigation.md for details on why this is needed.
+
+        const _browserContext = getBrowserContext()
+        const serviceWorker = await getExtensionServiceWorker(_browserContext)
+        const browser = await chromium.connectOverCDP(getCdpUrl({ port: TEST_PORT }))
+        const context = browser.contexts()[0]
+
+        const page = await _browserContext.newPage()
+        await page.goto('https://example.com', { waitUntil: 'domcontentloaded' })
+        await page.bringToFront()
+
+        // Set up page listener BEFORE toggle - this is the key pattern
+        const pagePromise = context.waitForEvent('page', {
+            predicate: p => p.url().includes('example.com'),
+            timeout: 5000
+        })
+
+        // Toggle extension - no sleep needed after!
+        await serviceWorker.evaluate(async () => {
+            await globalThis.toggleExtensionForActiveTab()
+        })
+
+        // Wait for page event - this resolves when Playwright has fully processed the page
+        const targetPage = await pagePromise
+
+        // Page is now guaranteed to be ready
+        expect(targetPage.url()).toContain('example.com')
+
+        // evaluate() works immediately
+        const result = await targetPage.evaluate(() => window.location.href)
+        expect(result).toContain('example.com')
+
+        await browser.close()
+        await page.close()
+    }, 30000)
+
     it('should maintain correct page.url() with iframe-heavy pages', async () => {
         const browserContext = getBrowserContext()
         const serviceWorker = await getExtensionServiceWorker(browserContext)
