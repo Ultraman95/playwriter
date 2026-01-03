@@ -56,11 +56,11 @@
                     - link "indieweb.org" [ref=e42] [cursor=pointer]:
                       - /url: from?site=indieweb.org
                     - text: )
-            - row "790 points by 47thpresident 18 hours ago | hide | 184 comments" [ref=e43]:
+            - row "791 points by 47thpresident 18 hours ago | hide | 184 comments" [ref=e43]:
               - cell [ref=e44]
-              - cell "790 points by 47thpresident 18 hours ago | hide | 184 comments" [ref=e45]:
+              - cell "791 points by 47thpresident 18 hours ago | hide | 184 comments" [ref=e45]:
                 - generic [ref=e46]:
-                  - text: 790 points by
+                  - text: 791 points by
                   - link "47thpresident" [ref=e47] [cursor=pointer]:
                     - /url: user?id=47thpresident
                   - generic "2026-01-02T19:48:25 1767383305" [ref=e48]:
@@ -88,11 +88,11 @@
                     - link "reuters.com" [ref=e63] [cursor=pointer]:
                       - /url: from?site=reuters.com
                     - text: )
-            - row "593 points by jumpocelot 8 hours ago | hide | 1356 comments" [ref=e64]:
+            - row "600 points by jumpocelot 8 hours ago | hide | 1367 comments" [ref=e64]:
               - cell [ref=e65]
-              - cell "593 points by jumpocelot 8 hours ago | hide | 1356 comments" [ref=e66]:
+              - cell "600 points by jumpocelot 8 hours ago | hide | 1367 comments" [ref=e66]:
                 - generic [ref=e67]:
-                  - text: 593 points by
+                  - text: 600 points by
                   - link "jumpocelot" [ref=e68] [cursor=pointer]:
                     - /url: user?id=jumpocelot
                   - generic "2026-01-03T06:35:21 1767422121" [ref=e69]:
@@ -102,7 +102,7 @@
                   - link "hide" [ref=e71] [cursor=pointer]:
                     - /url: hide?id=46473348&goto=news
                   - text: "|"
-                  - link "1356 comments" [ref=e72] [cursor=pointer]:
+                  - link "1367 comments" [ref=e72] [cursor=pointer]:
                     - /url: item?id=46473348
             - row [ref=e73]
             - row "3. upvote Daft Punk Easter Egg in the BPM Tempo of Harder, Better, Faster, Stronger? (madebywindmill.com)" [ref=e74]:
@@ -137,69 +137,69 @@
                   - link "96 comments" [ref=e93] [cursor=pointer]:
                     - /url: item?id=46469577
             - row [ref=e94]
-            - 'row "4. upvote Of Boot Vectors and Double Glitches: Bypassing RP2350''s Secure Boot (ccc.de)" [ref=e95]':
+            - row "4. upvote X-Clacks-Overhead (hleb.dev)" [ref=e95]:
               - cell "4." [ref=e96]
               - cell "upvote" [ref=e97]:
                 - link "upvote" [ref=e99] [cursor=pointer]:
-                  - /url: vote?id=46403062&how=up&goto=news
+                  - /url: vote?id=46475437&how=up&goto=news
                   - generic "upvote" [ref=e100]
-              - 'cell "Of Boot Vectors and Double Glitches: Bypassing RP2350''s Secure Boot (ccc.de)" [ref=e101]':
+              - cell "X-Clacks-Overhead (hleb.dev)" [ref=e101]:
                 - generic [ref=e102]:
-                  - 'link "Of Boot Vectors and Double Glitches: Bypassing RP2350''s Secure Boot" [ref=e103] [cursor=pointer]':
-                    - /url: https://streaming.media.ccc.de/39c3/relive/2149
+                  - link "X-Clacks-Overhead" [ref=e103] [cursor=pointer]:
+                    - /url: https://hleb.dev/post/x-clacks-overhead/
                   - generic [ref=e104]:
                     - text: (
-                    - link "ccc.de" [ref=e105] [cursor=pointer]:
-                      - /url: from?site=ccc.de
+                    - link "hleb.dev" [ref=e105] [cursor=pointer]:
+                      - /url: from?site=hleb.dev
                     - text: )
-            - row "100 points by aberoham 11 hours ago | hide | 10 comments" [ref=e106]:
+            - row "15 points by hleb_dev 3 hours ago | hide | 3 comments" [ref=e106]:
               - cell [ref=e107]
-              - cell "100 points by aberoham 11 hours ago | hide | 10 comments" [ref=e108]:
+              - cell "15 points by hleb_dev 3 hours ago | hide | 3 comments" [ref=e108]:
                 - generic [ref=e109]:
-                  - text: 100 points by
-                  - link "aberoham" [ref=e110] [cursor=pointer]:
-                    - /url: user?id=aberoham
-                  - generic "2025-12-27T16:49:39 1766854179" [ref=e111]:
-                    - link "11 hours ago" [ref=e112] [cursor=pointer]:
-                      - /url: item?id=46403062
+                  - text: 15 points by
+                  - link "hleb_dev" [ref=e110] [cursor=pointer]:
+                    - /url: user?id=hleb_dev
+                  - generic "2026-01-03T11:37:07 1767440227" [ref=e111]:
+                    - link "3 hours ago" [ref=e112] [cursor=pointer]:
+                      - /url: item?id=46475437
                   - text: "|"
                   - link "hide" [ref=e113] [cursor=pointer]:
-                    - /url: hide?id=46403062&goto=news
+                    - /url: hide?id=46475437&goto=news
                   - text: "|"
-                  - link "10 comments" [ref=e114] [cursor=pointer]:
-                    - /url: item?id=46403062
+                  - link "3 comments" [ref=e114] [cursor=pointer]:
+                    - /url: item?id=46475437
             - row [ref=e115]
-            - row "5. upvote X-Clacks-Overhead (hleb.dev)" [ref=e116]:
+            - 'row "5. upvote Of Boot Vectors and Double Glitches: Bypassing RP2350''s Secure Boot (ccc.de)" [ref=e116]':
               - cell "5." [ref=e117]
               - cell "upvote" [ref=e118]:
                 - link "upvote" [ref=e120] [cursor=pointer]:
-                  - /url: vote?id=46475437&how=up&goto=news
+                  - /url: vote?id=46403062&how=up&goto=news
                   - generic "upvote" [ref=e121]
-              - cell "X-Clacks-Overhead (hleb.dev)" [ref=e122]:
+              - 'cell "Of Boot Vectors and Double Glitches: Bypassing RP2350''s Secure Boot (ccc.de)" [ref=e122]':
                 - generic [ref=e123]:
-                  - link "X-Clacks-Overhead" [ref=e124] [cursor=pointer]:
-                    - /url: https://hleb.dev/post/x-clacks-overhead/
+                  - 'link "Of Boot Vectors and Double Glitches: Bypassing RP2350''s Secure Boot" [ref=e124] [cursor=pointer]':
+                    - /url: https://streaming.media.ccc.de/39c3/relive/2149
                   - generic [ref=e125]:
                     - text: (
-                    - link "hleb.dev" [ref=e126] [cursor=pointer]:
-                      - /url: from?site=hleb.dev
+                    - link "ccc.de" [ref=e126] [cursor=pointer]:
+                      - /url: from?site=ccc.de
                     - text: )
-            - row "14 points by hleb_dev 3 hours ago | hide | 3 comments" [ref=e127]:
+            - row "100 points by aberoham 11 hours ago | hide | 10 comments" [ref=e127]:
               - cell [ref=e128]
-              - cell "14 points by hleb_dev 3 hours ago | hide | 3 comments" [ref=e129]:
+              - cell "100 points by aberoham 11 hours ago | hide | 10 comments" [ref=e129]:
                 - generic [ref=e130]:
-                  - text: 14 points by
-                  - link "hleb_dev" [ref=e131] [cursor=pointer]:
-                    - /url: user?id=hleb_dev
-                  - generic "2026-01-03T11:37:07 1767440227" [ref=e132]:
-                    - link "3 hours ago" [ref=e133] [cursor=pointer]:
-                      - /url: item?id=46475437
+                  - text: 100 points by
+                  - link "aberoham" [ref=e131] [cursor=pointer]:
+                    - /url: user?id=aberoham
+                  - generic "2025-12-27T16:49:39 1766854179" [ref=e132]:
+                    - link "11 hours ago" [ref=e133] [cursor=pointer]:
+                      - /url: item?id=46403062
                   - text: "|"
                   - link "hide" [ref=e134] [cursor=pointer]:
-                    - /url: hide?id=46475437&goto=news
+                    - /url: hide?id=46403062&goto=news
                   - text: "|"
-                  - link "3 comments" [ref=e135] [cursor=pointer]:
-                    - /url: item?id=46475437
+                  - link "10 comments" [ref=e135] [cursor=pointer]:
+                    - /url: item?id=46403062
             - row [ref=e136]
             - row "6. upvote IPv6 just turned 30 and still hasn't taken over the world (theregister.com)" [ref=e137]:
               - cell "6." [ref=e138]
@@ -278,11 +278,11 @@
                     - link "paradedb.notion.site" [ref=e187] [cursor=pointer]:
                       - /url: from?site=paradedb.notion.site
                     - text: )
-            - row "51 minutes ago | hide" [ref=e188]:
+            - row "53 minutes ago | hide" [ref=e188]:
               - cell [ref=e189]
-              - cell "51 minutes ago | hide" [ref=e190]:
+              - cell "53 minutes ago | hide" [ref=e190]:
                 - generic "2026-01-03T13:53:34 1767448414" [ref=e191]:
-                  - link "51 minutes ago" [ref=e192] [cursor=pointer]:
+                  - link "53 minutes ago" [ref=e192] [cursor=pointer]:
                     - /url: item?id=46476636
                 - text: "|"
                 - link "hide" [ref=e193] [cursor=pointer]:
@@ -489,9 +489,9 @@
                     - link "github.com/iquestlab" [ref=e329] [cursor=pointer]:
                       - /url: from?site=github.com/iquestlab
                     - text: )
-            - row "114 points by shenli3514 10 hours ago | hide | 33 comments" [ref=e330]:
+            - row "114 points by shenli3514 10 hours ago | hide | 34 comments" [ref=e330]:
               - cell [ref=e331]
-              - cell "114 points by shenli3514 10 hours ago | hide | 33 comments" [ref=e332]:
+              - cell "114 points by shenli3514 10 hours ago | hide | 34 comments" [ref=e332]:
                 - generic [ref=e333]:
                   - text: 114 points by
                   - link "shenli3514" [ref=e334] [cursor=pointer]:
@@ -503,7 +503,7 @@
                   - link "hide" [ref=e337] [cursor=pointer]:
                     - /url: hide?id=46472667&goto=news
                   - text: "|"
-                  - link "33 comments" [ref=e338] [cursor=pointer]:
+                  - link "34 comments" [ref=e338] [cursor=pointer]:
                     - /url: item?id=46472667
             - row [ref=e339]
             - row "16. upvote Tally – A tool to help agents classify your bank transactions (tallyai.money)" [ref=e340]:
@@ -649,11 +649,11 @@
                     - link "bbc.co.uk" [ref=e434] [cursor=pointer]:
                       - /url: from?site=bbc.co.uk
                     - text: )
-            - row "77 points by vekerdyb 13 hours ago | hide | 33 comments" [ref=e435]:
+            - row "78 points by vekerdyb 13 hours ago | hide | 33 comments" [ref=e435]:
               - cell [ref=e436]
-              - cell "77 points by vekerdyb 13 hours ago | hide | 33 comments" [ref=e437]:
+              - cell "78 points by vekerdyb 13 hours ago | hide | 33 comments" [ref=e437]:
                 - generic [ref=e438]:
-                  - text: 77 points by
+                  - text: 78 points by
                   - link "vekerdyb" [ref=e439] [cursor=pointer]:
                     - /url: user?id=vekerdyb
                   - generic "2025-12-31T08:04:30 1767168270" [ref=e440]:
@@ -794,63 +794,63 @@
                   - link "3 comments" [ref=e527] [cursor=pointer]:
                     - /url: item?id=46472230
             - row [ref=e528]
-            - row "25. upvote Unix v4 (1973) – Live Terminal (unixv4.dev)" [ref=e529]:
+            - 'row "25. upvote Ask HN: Who wants to be hired? (January 2026)" [ref=e529]':
               - cell "25." [ref=e530]
               - cell "upvote" [ref=e531]:
                 - link "upvote" [ref=e533] [cursor=pointer]:
-                  - /url: vote?id=46468283&how=up&goto=news
-                  - generic "upvote" [ref=e534]
-              - cell "Unix v4 (1973) – Live Terminal (unixv4.dev)" [ref=e535]:
-                - generic [ref=e536]:
-                  - link "Unix v4 (1973) – Live Terminal" [ref=e537] [cursor=pointer]:
-                    - /url: https://unixv4.dev/
-                  - generic [ref=e538]:
-                    - text: (
-                    - link "unixv4.dev" [ref=e539] [cursor=pointer]:
-                      - /url: from?site=unixv4.dev
-                    - text: )
-            - row "156 points by pjmlp 19 hours ago | hide | 75 comments" [ref=e540]:
-              - cell [ref=e541]
-              - cell "156 points by pjmlp 19 hours ago | hide | 75 comments" [ref=e542]:
-                - generic [ref=e543]:
-                  - text: 156 points by
-                  - link "pjmlp" [ref=e544] [cursor=pointer]:
-                    - /url: user?id=pjmlp
-                  - generic "2026-01-02T19:18:36 1767381516" [ref=e545]:
-                    - link "19 hours ago" [ref=e546] [cursor=pointer]:
-                      - /url: item?id=46468283
-                  - text: "|"
-                  - link "hide" [ref=e547] [cursor=pointer]:
-                    - /url: hide?id=46468283&goto=news
-                  - text: "|"
-                  - link "75 comments" [ref=e548] [cursor=pointer]:
-                    - /url: item?id=46468283
-            - row [ref=e549]
-            - 'row "26. upvote Ask HN: Who wants to be hired? (January 2026)" [ref=e550]':
-              - cell "26." [ref=e551]
-              - cell "upvote" [ref=e552]:
-                - link "upvote" [ref=e554] [cursor=pointer]:
                   - /url: vote?id=46466073&how=up&goto=news
-                  - generic "upvote" [ref=e555]
-              - 'cell "Ask HN: Who wants to be hired? (January 2026)" [ref=e556]':
-                - 'link "Ask HN: Who wants to be hired? (January 2026)" [ref=e558] [cursor=pointer]':
+                  - generic "upvote" [ref=e534]
+              - 'cell "Ask HN: Who wants to be hired? (January 2026)" [ref=e535]':
+                - 'link "Ask HN: Who wants to be hired? (January 2026)" [ref=e537] [cursor=pointer]':
                   - /url: item?id=46466073
-            - row "126 points by whoishiring 22 hours ago | hide | 234 comments" [ref=e559]:
-              - cell [ref=e560]
-              - cell "126 points by whoishiring 22 hours ago | hide | 234 comments" [ref=e561]:
-                - generic [ref=e562]:
+            - row "126 points by whoishiring 22 hours ago | hide | 234 comments" [ref=e538]:
+              - cell [ref=e539]
+              - cell "126 points by whoishiring 22 hours ago | hide | 234 comments" [ref=e540]:
+                - generic [ref=e541]:
                   - text: 126 points by
-                  - link "whoishiring" [ref=e563] [cursor=pointer]:
+                  - link "whoishiring" [ref=e542] [cursor=pointer]:
                     - /url: user?id=whoishiring
-                  - generic "2026-01-02T16:00:42 1767369642" [ref=e564]:
-                    - link "22 hours ago" [ref=e565] [cursor=pointer]:
+                  - generic "2026-01-02T16:00:42 1767369642" [ref=e543]:
+                    - link "22 hours ago" [ref=e544] [cursor=pointer]:
                       - /url: item?id=46466073
                   - text: "|"
-                  - link "hide" [ref=e566] [cursor=pointer]:
+                  - link "hide" [ref=e545] [cursor=pointer]:
                     - /url: hide?id=46466073&goto=news
                   - text: "|"
-                  - link "234 comments" [ref=e567] [cursor=pointer]:
+                  - link "234 comments" [ref=e546] [cursor=pointer]:
                     - /url: item?id=46466073
+            - row [ref=e547]
+            - row "26. upvote Unix v4 (1973) – Live Terminal (unixv4.dev)" [ref=e548]:
+              - cell "26." [ref=e549]
+              - cell "upvote" [ref=e550]:
+                - link "upvote" [ref=e552] [cursor=pointer]:
+                  - /url: vote?id=46468283&how=up&goto=news
+                  - generic "upvote" [ref=e553]
+              - cell "Unix v4 (1973) – Live Terminal (unixv4.dev)" [ref=e554]:
+                - generic [ref=e555]:
+                  - link "Unix v4 (1973) – Live Terminal" [ref=e556] [cursor=pointer]:
+                    - /url: https://unixv4.dev/
+                  - generic [ref=e557]:
+                    - text: (
+                    - link "unixv4.dev" [ref=e558] [cursor=pointer]:
+                      - /url: from?site=unixv4.dev
+                    - text: )
+            - row "156 points by pjmlp 19 hours ago | hide | 75 comments" [ref=e559]:
+              - cell [ref=e560]
+              - cell "156 points by pjmlp 19 hours ago | hide | 75 comments" [ref=e561]:
+                - generic [ref=e562]:
+                  - text: 156 points by
+                  - link "pjmlp" [ref=e563] [cursor=pointer]:
+                    - /url: user?id=pjmlp
+                  - generic "2026-01-02T19:18:36 1767381516" [ref=e564]:
+                    - link "19 hours ago" [ref=e565] [cursor=pointer]:
+                      - /url: item?id=46468283
+                  - text: "|"
+                  - link "hide" [ref=e566] [cursor=pointer]:
+                    - /url: hide?id=46468283&goto=news
+                  - text: "|"
+                  - link "75 comments" [ref=e567] [cursor=pointer]:
+                    - /url: item?id=46468283
             - row [ref=e568]
             - 'row "27. upvote Fighting Fire with Fire: Scalable Oral Exams (behind-the-enemy-lines.com)" [ref=e569]':
               - cell "27." [ref=e570]
@@ -867,9 +867,9 @@
                     - link "behind-the-enemy-lines.com" [ref=e579] [cursor=pointer]:
                       - /url: from?site=behind-the-enemy-lines.com
                     - text: )
-            - row "177 points by sethbannon 20 hours ago | hide | 234 comments" [ref=e580]:
+            - row "177 points by sethbannon 20 hours ago | hide | 236 comments" [ref=e580]:
               - cell [ref=e581]
-              - cell "177 points by sethbannon 20 hours ago | hide | 234 comments" [ref=e582]:
+              - cell "177 points by sethbannon 20 hours ago | hide | 236 comments" [ref=e582]:
                 - generic [ref=e583]:
                   - text: 177 points by
                   - link "sethbannon" [ref=e584] [cursor=pointer]:
@@ -881,7 +881,7 @@
                   - link "hide" [ref=e587] [cursor=pointer]:
                     - /url: hide?id=46467677&goto=news
                   - text: "|"
-                  - link "234 comments" [ref=e588] [cursor=pointer]:
+                  - link "236 comments" [ref=e588] [cursor=pointer]:
                     - /url: item?id=46467677
             - row [ref=e589]
             - row "28. upvote Accounting for Computer Scientists (2011) (kleppmann.com)" [ref=e590]:

@@ -40,15 +40,15 @@ const INTERACTIVE_ROLES = new Set([
 // Color categories for different role types (light backgrounds with good contrast for black text)
 // Format: [gradient-top, gradient-bottom, border]
 const ROLE_COLORS: Record<string, [string, string, string]> = {
-  // Links - light blue
-  link: ['#B3E5FC', '#81D4FA', '#4FC3F7'],
-  // Buttons - light green
-  button: ['#C8E6C9', '#A5D6A7', '#81C784'],
-  // Text inputs - light orange
-  textbox: ['#FFE0B2', '#FFCC80', '#FFB74D'],
-  combobox: ['#FFE0B2', '#FFCC80', '#FFB74D'],
-  searchbox: ['#FFE0B2', '#FFCC80', '#FFB74D'],
-  spinbutton: ['#FFE0B2', '#FFCC80', '#FFB74D'],
+  // Links - yellow (Vimium-style)
+  link: ['#FFF785', '#FFC542', '#E3BE23'],
+  // Buttons - orange
+  button: ['#FFE0B2', '#FFCC80', '#FFB74D'],
+  // Text inputs - light blue
+  textbox: ['#B3E5FC', '#81D4FA', '#4FC3F7'],
+  combobox: ['#B3E5FC', '#81D4FA', '#4FC3F7'],
+  searchbox: ['#B3E5FC', '#81D4FA', '#4FC3F7'],
+  spinbutton: ['#B3E5FC', '#81D4FA', '#4FC3F7'],
   // Checkboxes/Radios/Switches - light purple
   checkbox: ['#E1BEE7', '#CE93D8', '#BA68C8'],
   radio: ['#E1BEE7', '#CE93D8', '#BA68C8'],
@@ -59,10 +59,10 @@ const ROLE_COLORS: Record<string, [string, string, string]> = {
   menuitem: ['#F8BBD9', '#F48FB1', '#F06292'],
   menuitemcheckbox: ['#F8BBD9', '#F48FB1', '#F06292'],
   menuitemradio: ['#F8BBD9', '#F48FB1', '#F06292'],
-  // Tabs/Options - light indigo
-  tab: ['#C5CAE9', '#9FA8DA', '#7986CB'],
-  option: ['#C5CAE9', '#9FA8DA', '#7986CB'],
-  treeitem: ['#C5CAE9', '#9FA8DA', '#7986CB'],
+  // Tabs/Options - light green
+  tab: ['#C8E6C9', '#A5D6A7', '#81C784'],
+  option: ['#C8E6C9', '#A5D6A7', '#81C784'],
+  treeitem: ['#C8E6C9', '#A5D6A7', '#81C784'],
 }
 
 // Default yellow for unknown roles
