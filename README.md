@@ -338,17 +338,38 @@ PLAYWRITER_TOKEN=<secret> npx playwriter serve
 
 **In container/VM (where agent runs):**
 
-Using environment variables:
+Configure your MCP client with the host and token. You can pass them as CLI arguments:
 
-```bash
-export PLAYWRITER_HOST="host.docker.internal"
-export PLAYWRITER_TOKEN="<secret>"
+```json
+{
+  "mcpServers": {
+    "playwriter": {
+      "command": "npx",
+      "args": [
+        "playwriter@latest",
+        "--host", "host.docker.internal",
+        "--token", "<secret>"
+      ]
+    }
+  }
+}
 ```
 
-Or using CLI options:
+Or use environment variables (useful if you want to set them globally in your process or MCP client):
 
-```bash
-npx playwriter --host host.docker.internal --token <secret>
+```json
+{
+  "mcpServers": {
+    "playwriter": {
+      "command": "npx",
+      "args": ["playwriter@latest"],
+      "env": {
+        "PLAYWRITER_HOST": "host.docker.internal",
+        "PLAYWRITER_TOKEN": "<secret>"
+      }
+    }
+  }
+}
 ```
 
 Use `host.docker.internal` for devcontainers, or your host's IP for VMs/SSH.
