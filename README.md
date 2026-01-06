@@ -136,7 +136,7 @@ The function automatically shows labels, takes a screenshot, hides labels, and i
 
 ### Environment Variables
 
-#### `PLAYWRITER_AUTO_ENABLE`
+#### `PLAYWRITER_AUTO_ENABLE` (still unreleased, coming soon)
 
 When set, the MCP will automatically create an initial tab when a Playwright client connects and no tabs are currently enabled. This is useful for fully automated workflows where you don't want to manually click the extension icon.
 
@@ -277,7 +277,7 @@ const source = await getReactSource({ locator: page.locator('aria-ref=e5') });
 
 **User Collaboration Features:**
 
-- **Right-click → "Copy Playwriter Element Reference"** - Pin any element and reference it as `globalThis.playwriterPinnedElem1` in your automation code
+- **Right-click → "Copy Playwriter Element Reference"** (still unreleased, coming soon) - Pin any element and reference it as `globalThis.playwriterPinnedElem1` in your automation code
 - **Vimium-style visual labels** - `screenshotWithAccessibilityLabels()` captures screenshots with clickable labels on all interactive elements
 - **Tab group organization** - Connected tabs are grouped together with a green "playwriter" label
 - **Bypass automation detection** - Disconnect the extension temporarily to pass bot detection (e.g., Google login), then reconnect
