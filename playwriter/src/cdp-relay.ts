@@ -363,11 +363,9 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
   const app = new Hono()
   const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app })
 
-  // Helper to build WebSocket URL from request host
-  const getCdpWsUrl = (reqHost: string | undefined) => {
-    const hostHeader = reqHost || `${host}:${port}`
-    const wsUrl = `ws://${hostHeader}/cdp`
-    return token ? `${wsUrl}?token=${token}` : wsUrl
+  const getCdpWsUrl = (c: { req: { header: (name: string) => string | undefined } }) => {
+    const hostHeader = c.req.header('host') || `${host}:${port}`
+    return `ws://${hostHeader}/cdp`
   }
 
   app.get('/', (c) => {
@@ -383,7 +381,7 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
   })
 
   // CDP Discovery Endpoints - Standard Chrome DevTools Protocol HTTP API
-  // These allow tools like Playwright to discover the WebSocket URL automatically
+  // Allows tools like Playwright to discover the WebSocket URL via http://host:port
   // Spec: https://chromium.googlesource.com/chromium/src/+/main/content/browser/devtools/devtools_http_handler.cc
 
   app
@@ -391,18 +389,18 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
       return c.json({
         'Browser': `Playwriter/${VERSION}`,
         'Protocol-Version': '1.3',
-        'webSocketDebuggerUrl': getCdpWsUrl(c.req.header('host'))
+        'webSocketDebuggerUrl': getCdpWsUrl(c)
       })
     })
     .on(['GET', 'PUT'], '/json/version/', (c) => {
       return c.json({
         'Browser': `Playwriter/${VERSION}`,
         'Protocol-Version': '1.3',
-        'webSocketDebuggerUrl': getCdpWsUrl(c.req.header('host'))
+        'webSocketDebuggerUrl': getCdpWsUrl(c)
       })
     })
     .on(['GET', 'PUT'], '/json/list', (c) => {
-      const wsUrl = getCdpWsUrl(c.req.header('host'))
+      const wsUrl = getCdpWsUrl(c)
       return c.json(
         Array.from(connectedTargets.values()).map(t => ({
           id: t.targetId,
@@ -416,7 +414,7 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
       )
     })
     .on(['GET', 'PUT'], '/json/list/', (c) => {
-      const wsUrl = getCdpWsUrl(c.req.header('host'))
+      const wsUrl = getCdpWsUrl(c)
       return c.json(
         Array.from(connectedTargets.values()).map(t => ({
           id: t.targetId,
@@ -430,7 +428,7 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
       )
     })
     .on(['GET', 'PUT'], '/json', (c) => {
-      const wsUrl = getCdpWsUrl(c.req.header('host'))
+      const wsUrl = getCdpWsUrl(c)
       return c.json(
         Array.from(connectedTargets.values()).map(t => ({
           id: t.targetId,
@@ -444,7 +442,7 @@ export async function startPlayWriterCDPRelayServer({ port = 19988, host = '127.
       )
     })
     .on(['GET', 'PUT'], '/json/', (c) => {
-      const wsUrl = getCdpWsUrl(c.req.header('host'))
+      const wsUrl = getCdpWsUrl(c)
       return c.json(
         Array.from(connectedTargets.values()).map(t => ({
           id: t.targetId,
